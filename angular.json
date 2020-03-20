@@ -176,6 +176,46 @@
           }
         }
       }
+    },
+    "example-shared-lib": {
+      "projectType": "library",
+      "root": "projects/example-shared-lib",
+      "sourceRoot": "projects/example-shared-lib/src",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-ng-packagr:build",
+          "options": {
+            "tsConfig": "projects/example-shared-lib/tsconfig.lib.json",
+            "project": "projects/example-shared-lib/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/example-shared-lib/tsconfig.lib.prod.json"
+            }
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/example-shared-lib/src/test.ts",
+            "tsConfig": "projects/example-shared-lib/tsconfig.spec.json",
+            "karmaConfig": "projects/example-shared-lib/karma.conf.js"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "projects/example-shared-lib/tsconfig.lib.json",
+              "projects/example-shared-lib/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**"
+            ]
+          }
+        }
+      }
     }
   },
   "defaultProject": "angular-jumpstart",
