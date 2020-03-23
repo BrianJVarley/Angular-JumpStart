@@ -72,7 +72,7 @@ Then open a browser and visit `http://localhost:4201` and follow the directions 
 
 ## Notes and Examples
 
-- Lazy loading modules at runtime in the `Routes` declaration via `loadChildren` prop.
+> Lazy loading modules at runtime in the `Routes` declaration via `loadChildren` prop.
 
 ```JavaScript
 
@@ -87,9 +87,8 @@ const app_routes: Routes = [
 
 ```
 
-- Preventing CoreModules (Singletons / Single Use Components) from being reimported outside of `AppModule`.
-
-For example you don't want to re-import a root level toast component or logger service twice in the same app.
+> Preventing CoreModules (Singletons / Single Use Components) from being reimported outside of `AppModule`.
+> For example you don't want to re-import a root level toast component or logger service twice in the same app.
 
 ```JavaScript
 
@@ -103,7 +102,99 @@ export class OverlayModule extends EnsureModuleLoadedOnceGuard {    // Ensure th
 
 ```
 
-- Generating a shared library using Angular CLI.
+> Preventing Presentation (Child)Components from changing data within a Container(Parent). In a Container -> Presenation model we only want the Container to provide or modify the data. So you can use `ChangeDetectionStrategy.OnPush` strategy within the presentational component.
+
+```JavaScript
+
+@Component({
+  selector: 'cm-customers-card',
+  templateUrl: './customers-card.component.html',
+  styleUrls: [ './customers-card.component.css' ],
+  // When using OnPush detectors, then the framework will check an OnPush
+  // component when any of its input properties changes, when it fires
+  // an event, or when an observable fires an event ~ Victor Savkin (Angular Team)
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+
+```
+
+> Cloning reference type like Object and Arrays so ngChange still fires.
+> In this case we can use `import { List, Map, fromJS } from 'immutable';` Example usage of `immutable` to cast as immutable object..
+
+```JavaScript
+import { Injectable } from '@angular/core';
+import { Customer } from '../shared/interfaces';
+import { List, Map, fromJS } from 'immutable';
+import { Observable, of } from 'rxjs';
+import { map, filter } from 'rxjs/operators';
+import { ClonerService } from './cloner.service';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class CustomersService {
+
+  customers: Customer[] = [
+    {
+      id: 1,
+      name: 'John Doe',
+      address: {
+        city: 'Phoenix'
+      },
+      orderTotal: 9.99
+    }
+  ];
+
+  immutableCustomers = List<Customer>(this.customers);
+
+  constructor(private clonerService: ClonerService) {  }
+
+  getCustomers() : Observable<Customer[]> {
+    // const custs = this.customers;
+    // const custs = JSON.parse(JSON.stringify(this.customers));
+    // const custs = this.clonerService.deepClone<Customer[]>(this.customers);
+    const custs = this.immutableCustomers.toArray();
+    return of(custs);
+  }
+
+  getCustomer(id: number) : Observable<Customer> {
+    return this.getCustomers()
+      .pipe(
+        map(custs => {
+          const filteredCusts = custs.filter(cust => cust.id === id);
+          // Enable if using Immutable.js below
+          // const filteredCusts = this.immutableCustomers.filter(cust => cust.id === id);
+          if (filteredCusts) {
+            const cust = filteredCusts[0];
+            // return cust;
+            // return JSON.parse(JSON.stringify(cust)) as Customer;
+            //return this.clonerService.deepClone<Customer>(cust);
+            return fromJS(cust).toJS() as Customer;
+          }
+        }),
+      );
+  }
+
+  updateCustomer(customer: Customer) : Observable<boolean> {
+    const index = this.getCustomerIndex(customer.id);
+    customer.orderTotal = +customer.orderTotal;
+    // update collections
+    this.customers[index] = customer;
+    this.immutableCustomers = this.immutableCustomers.update(index, () => customer);
+    return of(true);
+  }
+
+  getCustomerIndex(id: number) {
+    return this.customers.findIndex((cust, index, array) => cust.id === id);
+  }
+
+}
+
+
+```
+
+> Generating a shared library using Angular CLI. This can be later
+> published as an NPM package for re-use in different projects.
 
 ```Bash
 ng generate library example-shared-lib
@@ -121,4 +212,3 @@ cd dist/example-shared-lib
 npm publish
 
 ```
-
