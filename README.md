@@ -72,7 +72,8 @@ Then open a browser and visit `http://localhost:4201` and follow the directions 
 
 ## Notes and Examples
 
-> Lazy loading modules at runtime in the `Routes` declaration via `loadChildren` prop.
+
+> Example: Lazy loading modules at runtime in the `Routes` declaration via `loadChildren` prop.
 
 ```JavaScript
 
@@ -87,7 +88,8 @@ const app_routes: Routes = [
 
 ```
 
-> Preventing CoreModules (Singletons / Single Use Components) from being reimported outside of `AppModule`.
+
+> Example:  Preventing CoreModules (Singletons / Single Use Components) from being reimported outside of `AppModule`.
 > For example you don't want to re-import a root level toast component or logger service twice in the same app.
 
 ```JavaScript
@@ -102,7 +104,8 @@ export class OverlayModule extends EnsureModuleLoadedOnceGuard {    // Ensure th
 
 ```
 
-> Preventing Presentation (Child)Components from changing data within a Container(Parent). In a Container -> Presenation model we only want the Container to provide or modify the data. So you can use `ChangeDetectionStrategy.OnPush` strategy within the presentational component.
+
+> Example: Guarding against Presentation (Child)Components from changing data within a Container(Parent). In a Container -> Presenation model we only want the Container to provide or modify the data. So you can use `ChangeDetectionStrategy.OnPush` strategy within the presentational component.
 
 ```JavaScript
 
@@ -118,7 +121,7 @@ export class OverlayModule extends EnsureModuleLoadedOnceGuard {    // Ensure th
 
 ```
 
-> Cloning reference type like Object and Arrays so ngChange still fires.
+> Example: Cloning reference type like Object and Arrays so ngChange still fires.
 > In this case we can use `import { List, Map, fromJS } from 'immutable';` Example usage of `immutable` to cast as immutable object..
 
 ```JavaScript
@@ -193,7 +196,75 @@ export class CustomersService {
 
 ```
 
-> Generating a shared library using Angular CLI. This can be later
+
+> Example: Inheriting from a Base Component to reduce duplicate @input, @output plumbing code in components.
+
+```JavaScript
+
+// The BaseComponent
+
+import { Component, OnInit, ChangeDetectionStrategy, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
+
+@Component({
+  selector: 'app-base-component',
+  template: '',
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class BaseComponent implements OnInit, OnChanges {
+  @Input() label: string;
+
+  private _value: string;
+  @Input() get value() {
+      return this._value;
+  }
+  set value(val: string) {
+      if (val && val !== this._value) {
+        this.isDirty = true;
+      }
+      this._value = val;
+      this.valueChange.emit(val);
+  }
+
+  @Input() isDirty = false;
+  @Output() valueChange = new EventEmitter<string>();
+
+  constructor() { }
+
+  ngOnInit() {
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['value']) {
+      console.log('Value changed ', changes['value'].currentValue);
+    }
+  }
+
+}
+
+// The Component Inheriting from BaseComponent
+
+import { Component, OnInit } from '@angular/core';
+import { BaseComponent } from '../base-component/base-component.component';
+
+@Component({
+  selector: 'app-widget1',
+  templateUrl: './widget1.component.html',
+  styleUrls: ['./widget1.component.css']
+})
+export class Widget1Component extends BaseComponent implements OnInit {
+
+  constructor() {
+    super();
+  }
+
+  ngOnInit() {
+  }
+
+}
+
+```
+
+> Example: Generating a shared library using Angular CLI. This can be later
 > published as an NPM package for re-use in different projects.
 
 ```Bash
