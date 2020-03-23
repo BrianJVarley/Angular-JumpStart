@@ -7,7 +7,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { LoginModule } from './login/login.module';
 import { CoreModule } from './core/core.module';
 import { SharedModule } from './shared/shared.module';
-import { ExampleSharedLibModule } from 'example-shared-lib';
+import { MyLibModule } from '../../projects/my-lib/src/lib/my-lib.module';
 
 @NgModule({
   imports: [
@@ -16,7 +16,7 @@ import { ExampleSharedLibModule } from 'example-shared-lib';
     AppRoutingModule, // Main routes for application
     CoreModule, // Singleton objects (services, components that are loaded only once, etc.)
     SharedModule, // Shared (multi-instance) objects
-    ExampleSharedLibModule
+    MyLibModule
   ],
   declarations: [AppComponent],
   bootstrap: [AppComponent]

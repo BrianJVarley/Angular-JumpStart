@@ -32,7 +32,7 @@ export class CustomersComponent implements OnInit {
     this.updateMapComponentDataPoints();
   }
 
-  @ViewChild('mapsContainer', { read: ViewContainerRef }) 
+  @ViewChild('mapsContainer', { read: ViewContainerRef })
   private mapsViewContainerRef: ViewContainerRef;
 
   constructor(private componentFactoryResolver: ComponentFactoryResolver,

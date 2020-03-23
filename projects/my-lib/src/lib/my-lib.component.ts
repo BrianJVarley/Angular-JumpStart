@@ -1,15 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'lib-example-shared-lib',
+  selector: 'lib-my-lib',
   template: `
     <p>
-      example-shared-lib works!
+      my-lib works!
     </p>
   `,
   styles: []
 })
-export class ExampleSharedLibComponent implements OnInit {
+export class MyLibComponent implements OnInit {
 
   constructor() { }
 
