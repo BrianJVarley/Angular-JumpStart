@@ -72,7 +72,6 @@ Then open a browser and visit `http://localhost:4201` and follow the directions 
 
 ## Notes and Examples
 
-
 > Example: Lazy loading modules at runtime in the `Routes` declaration via `loadChildren` prop.
 
 ```JavaScript
@@ -88,8 +87,7 @@ const app_routes: Routes = [
 
 ```
 
-
-> Example:  Preventing CoreModules (Singletons / Single Use Components) from being reimported outside of `AppModule`.
+> Example: Preventing CoreModules (Singletons / Single Use Components) from being reimported outside of `AppModule`.
 > For example you don't want to re-import a root level toast component or logger service twice in the same app.
 
 ```JavaScript
@@ -103,7 +101,6 @@ export class OverlayModule extends EnsureModuleLoadedOnceGuard {    // Ensure th
 }
 
 ```
-
 
 > Example: Guarding against Presentation (Child)Components from changing data within a Container(Parent). In a Container -> Presenation model we only want the Container to provide or modify the data. So you can use `ChangeDetectionStrategy.OnPush` strategy within the presentational component.
 
@@ -196,6 +193,44 @@ export class CustomersService {
 
 ```
 
+> Example: Unsubscribing from Observable subscriptions in Angular
+> using s Decorator.
+
+```JavaScript
+
+// Decorator Function
+function AutoUnsub() {
+    return function(constructor) {
+        const orig = constructor.prototype.ngOnDestroy
+        constructor.prototype.ngOnDestroy = function() {
+            for(const prop in this) {
+                const property = this[prop]
+                if(typeof property.subscribe === "function") {
+                    property.unsubscribe()
+                }
+            }
+            orig.apply()
+        }
+    }
+}
+```
+
+```JavaScript
+
+@Component({
+    ...
+})
+
+// AutoUnsub usage
+@AutoUnsub
+export class AppComponent implements OnInit {
+    observable$
+    ngOnInit () {
+        this.observable$ = Rx.Observable.interval(1000);
+        this.observable$.subscribe(x => console.log(x))
+    }
+}
+```
 
 > Example: Inheriting from a Base Component to reduce duplicate @input, @output plumbing code in components.
 
@@ -262,6 +297,209 @@ export class Widget1Component extends BaseComponent implements OnInit {
 
 }
 
+```
+
+> Example: Helper function to pipe Service Observable response to
+success and error actions in an effect.
+
+
+```JavaScript
+
+import { Action } from '@ngrx/store';
+import { Observable, of } from 'rxjs';
+import { catchError, mergeMap } from 'rxjs/operators';
+import { DataServiceError } from '../services';
+
+export abstract class DataAction<T> implements Action {
+  readonly type: string;
+  constructor(public readonly payload: T) {}
+}
+
+export abstract class DataErrorAction<T> implements Action {
+  readonly type: string;
+  constructor(public readonly payload: DataServiceError<T>) {}
+}
+
+// Function of additional success actions
+// that returns a function that returns
+// an observable of ngrx action(s) from DataService method observable
+export const toAction = (...actions: Action[]) => <T>(
+  source: Observable<T>,
+  successAction: new (data: T) => Action,
+  errorAction: new (err: DataServiceError<T>) => Action
+) =>
+  source.pipe(
+    mergeMap((data: T) => [new successAction(data), ...actions]),
+    catchError((err: DataServiceError<T>) => of(new errorAction(err)))
+  );
+
+
+
+```
+
+
+```JavaScript
+ // Example usage within an effect calling a service
+
+  @Effect()
+  getCustomers$: Observable<Action> = this.actions$
+    .pipe(
+      ofType(CustomerActions.GET_CUSTOMERS),
+      switchMap(() =>
+        toAction(
+          this.customerDataService.getCustomers(),
+          CustomerActions.GetCustomersSuccess,
+          CustomerActions.GetCustomersError
+        )
+      )
+    );
+
+
+```
+
+> Example: Using an Observable Store without using NgRx or another state management
+
+```JavaScript
+
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { of, Observable } from 'rxjs';
+import { map, catchError, switchMap } from 'rxjs/operators';
+import { ObservableStore } from '@codewithdan/observable-store';
+
+import { Customer } from '../core/model';
+import { StoreState } from '../shared/interfaces';
+
+@Injectable({
+    providedIn: 'root'
+})
+export class CustomersService extends ObservableStore<StoreState> {
+
+    apiUrl = 'api/customers';
+
+    constructor(private http: HttpClient) { 
+        super({ trackStateHistory: true });
+    }
+
+    private fetchCustomers() {
+        return this.http.get<Customer[]>(this.apiUrl)
+            .pipe(
+                map(customers => {
+                    this.setState({ customers }, CustomersStoreActions.GetCustomers);
+                    return customers;
+                }),
+                catchError(this.handleError)
+            );
+    }
+
+    getAll() {
+        const state = this.getState();
+        // pull from store cache
+        if (state && state.customers) {
+            console.log(this.stateHistory);
+            return of(state.customers);
+        }
+        // doesn't exist in store so fetch from server
+        else {
+            return this.fetchCustomers()
+                .pipe(
+                    catchError(this.handleError)
+                );
+        }
+    }
+
+    get(id) {
+        return this.getAll()
+            .pipe(
+                map(custs => {
+                    let filteredCusts = custs.filter(cust => cust.id === id);
+                    const customer = (filteredCusts && filteredCusts.length) ? filteredCusts[0] : null;                
+                    this.setState({ customer }, CustomersStoreActions.GetCustomer);
+                    return customer;
+                }),
+                catchError(this.handleError)
+            );
+    }
+
+    add(customer: Customer) {
+        return this.http.post(this.apiUrl, customer)
+            .pipe(
+                switchMap(cust => {
+                    // update local store with added customer data
+                    // not required of course unless the store cache is needed 
+                    // (it is for the customer list component in this example)
+                    return this.fetchCustomers();
+                }),
+                catchError(this.handleError)
+            );
+    }
+
+    update(customer: Customer) {
+        return this.http.put(this.apiUrl + '/' + customer.id, customer)
+            .pipe(
+                switchMap(cust => {
+                    // update local store with updated customer data
+                    // not required of course unless the store cache is needed 
+                    // (it is for the customer list component in this example)
+                    return this.fetchCustomers();
+                }),
+                catchError(this.handleError)
+            );
+    }
+
+    delete(id: number) {
+        return this.http.delete(this.apiUrl + '/' + id)
+            .pipe(
+                switchMap(() => {
+                    // update local store since customer deleted
+                    // not required of course unless the store cache is needed 
+                    // (it is for the customer list component in this example)
+                    return this.fetchCustomers();
+                }),
+                catchError(this.handleError)
+            );
+    }
+
+    private handleError(error: any) {
+        console.error('server error:', error);
+        if (error.error instanceof Error) {
+            const errMessage = error.error.message;
+            return Observable.throw(errMessage);
+        }
+        return Observable.throw(error || 'Server error');
+      }
+}
+
+export enum CustomersStoreActions {
+    GetCustomers = 'get_customers',
+    GetCustomer = 'get_customer'
+}
+
+```
+
+> Example: Mediator Pattern using an EventBus service to communicate between components
+
+```JavaScript
+
+// Component emitting to eventBus service
+ constructor(private eventbus: EventBusService) { }
+
+  selectCustomer(cust: Customer) {
+    // Send customer to any eventbus listeners listening for the CustomerSelected event
+    this.eventbus.emit(new EmitEvent(Events.CustomerSelected, cust));
+  }
+
+```
+
+```JavaScript
+
+// Component listening to the eventBus service event emit
+constructor(private eventbus: EventBusService, private dataService: DataService) { }
+
+  ngOnInit() {
+    //Example of using an event bus to provide loosely coupled communication (mediator pattern)
+    this.eventbusSub = this.eventbus.on(Events.CustomerSelected, (cust => this.customer = cust));
+  }
 ```
 
 > Example: Generating a shared library using Angular CLI. This can be later
