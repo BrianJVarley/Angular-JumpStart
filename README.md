@@ -70,11 +70,9 @@ Then open a browser and visit `http://localhost:4201` and follow the directions 
 1. Visit `http://localhost`
 1. Stop Kubernetes using `kubectl delete -f .k8s`
 
-
-
 ### RxJS Operators and Examples
 
-> **forkjoin**:  Use `forkJoin` to join multiple Observable responses into a single Observable array.
+> **forkjoin**: Use `forkJoin` to join multiple Observable responses into a single Observable array.
 
 ```JavaScript
 
@@ -93,10 +91,9 @@ getCharactersAndPlanets() {
 
 ```
 
-> **mergeMap**:  Use `switchMap` to switch to another Observable request. 
+> **mergeMap**: Use `switchMap` to switch to another Observable request.
 > Then use `mergeMap` to merge or flatten custom data into that Observable response.
 > Finally call `toArray` to return an Observable array.
-
 
 ```JavaScript
 
@@ -107,7 +104,7 @@ getCharactersAndHomeworlds() {
           // convert array to observable
           return from(res['results']);
         }),
-        mergeMap((person: any) => { 
+        mergeMap((person: any) => {
             return this.http.get(person['homeworld'])
               .pipe(
                 map(hw => {
@@ -122,9 +119,8 @@ getCharactersAndHomeworlds() {
 
 ```
 
-> **switchMap**:  Use `switchMap` to return Observable response and _switch_
+> **switchMap**: Use `switchMap` to return Observable response and _switch_
 > to another Observable.
-
 
 ```JavaScript
 
@@ -149,8 +145,7 @@ getCharactersAndHomeworlds() {
 
 ## Other Angular Code Examples
 
-
-> Example: Lazy loading modules at runtime in the `Routes` declaration via `loadChildren` prop.
+> **Example:** Lazy loading modules at runtime in the `Routes` declaration via `loadChildren` prop.
 
 ```JavaScript
 
@@ -165,7 +160,7 @@ const app_routes: Routes = [
 
 ```
 
-> Example: Preventing CoreModules (Singletons / Single Use Components) from being reimported outside of `AppModule`.
+> **Example:** Preventing CoreModules (Singletons / Single Use Components) from being reimported outside of `AppModule`.
 > For example you don't want to re-import a root level toast component or logger service twice in the same app.
 
 ```JavaScript
@@ -180,7 +175,7 @@ export class OverlayModule extends EnsureModuleLoadedOnceGuard {    // Ensure th
 
 ```
 
-> Example: Guarding against Presentation (Child)Components from changing data within a Container(Parent). In a Container -> Presenation model we only want the Container to provide or modify the data. So you can use `ChangeDetectionStrategy.OnPush` strategy within the presentational component.
+> **Example:** Guarding against Presentation (Child)Components from changing data within a Container(Parent). In a Container -> Presenation model we only want the Container to provide or modify the data. So you can use `ChangeDetectionStrategy.OnPush` strategy within the presentational component.
 
 ```JavaScript
 
@@ -196,10 +191,10 @@ export class OverlayModule extends EnsureModuleLoadedOnceGuard {    // Ensure th
 
 ```
 
-> Example: TL;DR; Don't use functions or methods in the template, use pipes instead.
+> **Example:** TL;DR; Don't use functions or methods in the template, use pipes instead.
 > A pipe would be called only when input values change. A function or a method would be called on every change detection.
 > Because the transform function of the `pipe` only gets called if the inputs are different.
-> 
+>
 > You can further improve the performance of the pipe by caching results with the `@memo` decorator
 
 ```JavaScript
@@ -229,7 +224,7 @@ export class AddTaxMemoPipe implements PipeTransform {
 
 ```
 
-> Example: Cloning reference type like Object and Arrays so ngChange still fires.
+> **Example:** Cloning reference type like Object and Arrays so ngChange still fires.
 > In this case we can use `import { List, Map, fromJS } from 'immutable';` Example usage of `immutable` to cast as immutable object..
 
 ```JavaScript
@@ -304,7 +299,7 @@ export class CustomersService {
 
 ```
 
-> Example: Unsubscribing from Observable subscriptions in Angular
+> **Example:** Unsubscribing from Observable subscriptions in Angular
 > using s Decorator.
 
 ```JavaScript
@@ -343,7 +338,7 @@ export class AppComponent implements OnInit {
 }
 ```
 
-> Example: Inheriting from a Base Component to reduce duplicate @input, @output plumbing code in components.
+> **Example:** Inheriting from a Base Component to reduce duplicate @input, @output plumbing code in components.
 
 ```JavaScript
 
@@ -410,7 +405,7 @@ export class Widget1Component extends BaseComponent implements OnInit {
 
 ```
 
-> Example: Helper function to pipe Service Observable response to
+> **Example:** Helper function to pipe Service Observable response to
 > success and error actions in an effect.
 
 ```JavaScript
@@ -466,7 +461,7 @@ export const toAction = (...actions: Action[]) => <T>(
 
 ```
 
-> Example: Using an Observable Store without using NgRx or another state management
+> **Example:** Using an Observable Store without using NgRx or another state management
 
 ```JavaScript
 
@@ -586,7 +581,7 @@ export enum CustomersStoreActions {
 
 ```
 
-> Example: Mediator Pattern using an EventBus service to communicate between components
+> **Example:** Mediator Pattern using an EventBus service to communicate between components
 
 ```JavaScript
 
@@ -611,7 +606,7 @@ constructor(private eventbus: EventBusService, private dataService: DataService)
   }
 ```
 
-> Example: Generating a shared library using Angular CLI. This can be later
+> **Example:** Generating a shared library using Angular CLI. This can be later
 > published as an NPM package for re-use in different projects.
 
 ```Bash
