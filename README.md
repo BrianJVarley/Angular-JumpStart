@@ -607,7 +607,8 @@ constructor(private eventbus: EventBusService, private dataService: DataService)
 ```
 
 > **Example:** Generating a shared library using Angular CLI. This can be later
-> published as an NPM package for re-use in different projects.
+> published as an NPM package for re-use in different projects. Useful to share generic components
+> across projects. For example a Notification Dialog component.
 
 ```Bash
 ng generate library example-shared-lib
@@ -625,3 +626,13 @@ cd dist/example-shared-lib
 npm publish
 
 ```
+
+
+## Security Considerations
+
+
+### [Route Guards([https://link](https://medium.com/@ryanchenkie_40935/angular-authentication-using-route-guards-bf7a4ca13ae3))
+
+
+### [CORS]([https://link](https://itnext.io/cors-understanding-it-practically-9c401ed818cd?gi=58e87dec6a6d))
+
