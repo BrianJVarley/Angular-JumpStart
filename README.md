@@ -143,6 +143,51 @@ getCharactersAndHomeworlds() {
 
 ```
 
+### HTTP INterceptors and CORS
+
+> **HttpInterceptor**: Use `forkJoin` to join multiple Observable responses into a single Observable array.
+
+
+1. Register the interceptor in the core module's providers property.
+
+```JavaScript
+
+@NgModule({
+  providers: [SorterService, FilterService, DataService, TrackByService,
+    DialogService, AuthService, EventBusService,
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true,
+    }
+  ] // these should be singleton
+})
+
+```
+
+2. Add the interceptor implementation. In this case we clone the request and add
+   an Auth token to the request's header.
+   
+```JavaScript
+
+import {Injectable} from '@angular/core';
+import {HttpEvent, HttpInterceptor, HttpHandler, HttpRequest} from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+@Injectable()
+export class AuthInterceptor implements HttpInterceptor {
+  constructor() {}
+
+  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    // Get the auth header (fake value is shown here)
+    const authHeader = '49a5kdkv409fd39'; // this.authService.getAuthHeader();
+    const authReq = req.clone({headers: req.headers.set('Authorization', authHeader)});
+    return next.handle(authReq);
+  }
+}
+
+```
+
 ## Other Angular Code Examples
 
 > **Example:** Lazy loading modules at runtime in the `Routes` declaration via `loadChildren` prop.
@@ -605,28 +650,6 @@ constructor(private eventbus: EventBusService, private dataService: DataService)
     this.eventbusSub = this.eventbus.on(Events.CustomerSelected, (cust => this.customer = cust));
   }
 ```
-
-> **Example:** Generating a shared library using Angular CLI. This can be later
-> published as an NPM package for re-use in different projects. Useful to share generic components
-> across projects. For example a Notification Dialog component.
-
-```Bash
-ng generate library example-shared-lib
-ng build example-shared-lib. See [Creating Libraries](https://angular.io/guide/creating-libraries)
-```
-
-```JavaScript
-import { myExport } from 'example-shared-lib';
-
-```
-
-```Bash
-ng build example-shared-lib --prod
-cd dist/example-shared-lib
-npm publish
-
-```
-
 
 ## Security Considerations
 
