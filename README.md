@@ -70,7 +70,85 @@ Then open a browser and visit `http://localhost:4201` and follow the directions 
 1. Visit `http://localhost`
 1. Stop Kubernetes using `kubectl delete -f .k8s`
 
-## Notes and Examples
+
+
+### RxJS Operators and Examples
+
+> **forkjoin**:  Use `forkJoin` to join multiple Observable responses into a single Observable array.
+
+```JavaScript
+
+getCharactersAndPlanets() {
+    return forkJoin(
+      this.getCharacters(),
+      this.getPlanets()
+    )
+    .pipe(
+      map((res) => {
+        return { characters: res[0], planets: res[1] };
+      }),
+      catchError(error => of(error))
+    );
+  }
+
+```
+
+> **mergeMap**:  Use `switchMap` to switch to another Observable request. 
+> Then use `mergeMap` to merge or flatten custom data into that Observable response.
+> Finally call `toArray` to return an Observable array.
+
+
+```JavaScript
+
+getCharactersAndHomeworlds() {
+    return this.http.get(this.baseUrl + 'people')
+      .pipe(
+        switchMap(res => {
+          // convert array to observable
+          return from(res['results']);
+        }),
+        mergeMap((person: any) => { 
+            return this.http.get(person['homeworld'])
+              .pipe(
+                map(hw => {
+                  person['homeworld'] = hw;
+                  return person;
+                })
+              );
+        }),
+        toArray()
+      );
+  }
+
+```
+
+> **switchMap**:  Use `switchMap` to return Observable response and _switch_
+> to another Observable.
+
+
+```JavaScript
+
+
+  getCharacterAndHomeworld() {
+    const url = this.baseUrl + 'people/1';
+    return this.http.get(url)
+      .pipe(
+        switchMap(character => {
+          return this.http.get(character['homeworld'])
+            .pipe(
+              map(hw => {
+                character['homeworld'] = hw;
+                return character;
+              })
+            )
+        })
+      );
+  }
+
+```
+
+## Other Angular Code Examples
+
 
 > Example: Lazy loading modules at runtime in the `Routes` declaration via `loadChildren` prop.
 
@@ -115,6 +193,39 @@ export class OverlayModule extends EnsureModuleLoadedOnceGuard {    // Ensure th
   // an event, or when an observable fires an event ~ Victor Savkin (Angular Team)
   changeDetection: ChangeDetectionStrategy.OnPush
 })
+
+```
+
+> Example: TL;DR; Don't use functions or methods in the template, use pipes instead.
+> A pipe would be called only when input values change. A function or a method would be called on every change detection.
+> Because the transform function of the `pipe` only gets called if the inputs are different.
+> 
+> You can further improve the performance of the pipe by caching results with the `@memo` decorator
+
+```JavaScript
+
+import { Pipe, PipeTransform } from '@angular/core';
+import memo from 'memo-decorator';
+
+@Pipe({
+  name: 'addtaxmemo'
+})
+export class AddTaxMemoPipe implements PipeTransform {
+  @memo()
+  transform(price: number): number {
+    if (price) {
+      return this.getTotalPrice(price);
+    }
+    return price;
+  }
+
+  getTotalPrice(price: number) {
+    console.log('addtaxmemo pipe called');
+    let total = price + (price * .08);
+    return total;
+  }
+
+}
 
 ```
 
@@ -300,8 +411,7 @@ export class Widget1Component extends BaseComponent implements OnInit {
 ```
 
 > Example: Helper function to pipe Service Observable response to
-success and error actions in an effect.
-
+> success and error actions in an effect.
 
 ```JavaScript
 
@@ -336,7 +446,6 @@ export const toAction = (...actions: Action[]) => <T>(
 
 
 ```
-
 
 ```JavaScript
  // Example usage within an effect calling a service
@@ -377,7 +486,7 @@ export class CustomersService extends ObservableStore<StoreState> {
 
     apiUrl = 'api/customers';
 
-    constructor(private http: HttpClient) { 
+    constructor(private http: HttpClient) {
         super({ trackStateHistory: true });
     }
 
@@ -413,7 +522,7 @@ export class CustomersService extends ObservableStore<StoreState> {
             .pipe(
                 map(custs => {
                     let filteredCusts = custs.filter(cust => cust.id === id);
-                    const customer = (filteredCusts && filteredCusts.length) ? filteredCusts[0] : null;                
+                    const customer = (filteredCusts && filteredCusts.length) ? filteredCusts[0] : null;
                     this.setState({ customer }, CustomersStoreActions.GetCustomer);
                     return customer;
                 }),
@@ -426,7 +535,7 @@ export class CustomersService extends ObservableStore<StoreState> {
             .pipe(
                 switchMap(cust => {
                     // update local store with added customer data
-                    // not required of course unless the store cache is needed 
+                    // not required of course unless the store cache is needed
                     // (it is for the customer list component in this example)
                     return this.fetchCustomers();
                 }),
@@ -439,7 +548,7 @@ export class CustomersService extends ObservableStore<StoreState> {
             .pipe(
                 switchMap(cust => {
                     // update local store with updated customer data
-                    // not required of course unless the store cache is needed 
+                    // not required of course unless the store cache is needed
                     // (it is for the customer list component in this example)
                     return this.fetchCustomers();
                 }),
@@ -452,7 +561,7 @@ export class CustomersService extends ObservableStore<StoreState> {
             .pipe(
                 switchMap(() => {
                     // update local store since customer deleted
-                    // not required of course unless the store cache is needed 
+                    // not required of course unless the store cache is needed
                     // (it is for the customer list component in this example)
                     return this.fetchCustomers();
                 }),
