@@ -654,8 +654,7 @@ constructor(private eventbus: EventBusService, private dataService: DataService)
 ## Security Considerations
 
 
-### [Route Guards([https://link](https://medium.com/@ryanchenkie_40935/angular-authentication-using-route-guards-bf7a4ca13ae3))
+### [Route Guards](https://medium.com/@ryanchenkie_40935/angular-authentication-using-route-guards-bf7a4ca13ae3)
 
-
-### [CORS]([https://link](https://itnext.io/cors-understanding-it-practically-9c401ed818cd?gi=58e87dec6a6d))
+### [CORS](https://itnext.io/cors-understanding-it-practically-9c401ed818cd?gi=58e87dec6a6d)
 
